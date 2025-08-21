@@ -2,11 +2,36 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-// API base URL configuration
+// API base URL configuration - will be updated when backend is deployed
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // Configure axios defaults
 axios.defaults.baseURL = API_BASE_URL;
+
+// Add request interceptor for better error handling
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for better error handling
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ERR_NETWORK') {
+      toast.error('Unable to connect to server. Please try again later.');
+    }
+    return Promise.reject(error);
+  }
+);
 
 const AuthContext = createContext();
 
